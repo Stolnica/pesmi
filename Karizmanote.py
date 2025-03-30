@@ -11,8 +11,7 @@ izbor1 = "Naloži seznam not"
 
 # Nastavimo vrstni red menija in ikon
 mozni_izbori = [izbor1]
-ikone = ['upload']
-
+ikone = ['music-note-list']
 
 # Funkcija za branje besedila iz Word dokumenta ali txt datoteke
 def preberi_opombe(datoteka):
@@ -28,7 +27,6 @@ def preberi_opombe(datoteka):
             vrstice = [line.strip() for line in f.readlines() if line.strip()]
         return vrstice
     return []
-
 
 # Funkcija za pretvorbo PDF datoteke v slike
 def pdf_v_slike(pdf_pot, izhodna_mapa="slike_pdf", resolucija=3):
@@ -50,9 +48,8 @@ def pdf_v_slike(pdf_pot, izhodna_mapa="slike_pdf", resolucija=3):
 
     return slike_poti
 
-
 # Funkcija za iskanje PDF datotek v mapi na podlagi ključnih besed
-def poisci_pdf_datoteke(kljucne_besede, mapa="./"):      # mapa="E:\\Karizma note"):
+def poisci_pdf_datoteke(kljucne_besede,  mapa="./"):
     if not os.path.exists(mapa):
         return []
 
@@ -64,7 +61,6 @@ def poisci_pdf_datoteke(kljucne_besede, mapa="./"):      # mapa="E:\\Karizma not
                     pdf_datoteke.append(os.path.join(mapa, datoteka))
                     break
     return pdf_datoteke
-
 
 # CSS za glavno vsebino
 st.markdown("""
@@ -86,44 +82,48 @@ img {
 </style>
 """, unsafe_allow_html=True)
 
-# Naložimo sidebar sliko
-#sidebarimage = Image.open(r'./cerkev.jpg')
-
 # --- Glavni meni ---
 with st.sidebar:
-    #st.image(sidebarimage, width=290)
     choose = option_menu("Stolnica Maribor", mozni_izbori,
                          icons=ikone,
                          menu_icon="list", default_index=0)
 
     # Gumb "Prikaži note"
     if st.button("Prikaži note"):
-        note_path = "./note.docx"
-        if os.path.exists(note_path):
-            # Preberemo vrstice iz note.docx
-            kljucne_besede = preberi_opombe(note_path)
+        st.session_state.show_notes = True
 
-            if kljucne_besede:
-                with st.expander("Ključne besede iz note.docx"):
-                    for beseda in kljucne_besede:
-                        st.write(f"- {beseda}")
+# Avtomatsko prikazovanje ob nalaganju strani
+if 'show_notes' not in st.session_state:
+    st.session_state.show_notes = True
 
-                # Poiščemo ustrezne PDF datoteke
-                pdf_datoteke = poisci_pdf_datoteke(kljucne_besede)
+# Obdelava prikaza dokumentov (tako za avtomatski prikaz kot za ročni klik)
+if st.session_state.show_notes:
+    note_path = "./note.docx"
+    if os.path.exists(note_path):
+        # Preberemo vrstice iz note.docx
+        kljucne_besede = preberi_opombe(note_path)
 
-                if pdf_datoteke:
-                    with st.expander("Najdene PDF datoteke"):
-                        for pdf_datoteka in pdf_datoteke:
-                            st.write(f"- {os.path.basename(pdf_datoteka)}")
+        if kljucne_besede:
+            with st.sidebar.expander("Ključne besede iz note.docx"):
+                for beseda in kljucne_besede:
+                    st.write(f"- {beseda}")
 
-                    # Shranimo PDF-je v session state za prikaz v glavnem oknu
-                    st.session_state.pdf_files_to_display = pdf_datoteke
-                else:
-                    st.warning("Ni bilo mogoče najti PDF datotek, ki ustrezajo ključnim besedam.")
+            # Poiščemo ustrezne PDF datoteke
+            pdf_datoteke = poisci_pdf_datoteke(kljucne_besede)
+
+            if pdf_datoteke:
+                with st.sidebar.expander("Najdene PDF datoteke"):
+                    for pdf_datoteka in pdf_datoteke:
+                        st.write(f"- {os.path.basename(pdf_datoteka)}")
+
+                # Shranimo PDF-je v session state za prikaz v glavnem oknu
+                st.session_state.pdf_files_to_display = pdf_datoteke
             else:
-                st.warning("Datoteka note.docx ne vsebuje nobenih ključnih besed.")
+                st.sidebar.warning("Ni bilo mogoče najti PDF datotek, ki ustrezajo ključnim besedam.")
         else:
-            st.warning("Datoteka note.docx ne obstaja v trenutnem direktoriju.")
+            st.sidebar.warning("Datoteka note.docx ne vsebuje nobenih ključnih besed.")
+    else:
+        st.sidebar.warning("Datoteka note.docx ne obstaja v trenutnem direktoriju.")
 
 # Glavna vsebina
 if choose == "Naloži seznam not":
