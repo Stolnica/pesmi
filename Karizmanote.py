@@ -303,7 +303,7 @@ if 'pdf_files_to_display' in st.session_state and st.session_state.pdf_files_to_
 if 'show_all_notes' in st.session_state and st.session_state.show_all_notes:
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
     st.header("Seznam vseh not")
-    for datoteka in os.listdir("E:\\Karizma note"):
+    for datoteka in os.listdir("./"):
         if datoteka.lower().endswith('.pdf'):
             st.write(datoteka)
     st.markdown('</div>', unsafe_allow_html=True)
